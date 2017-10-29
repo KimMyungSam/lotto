@@ -507,17 +507,13 @@ def used_number(count):
 
 def generate(targetBand, numlist, quantile_max, quantile_min):
     ConditionCount = 0
-    count = 0
     lotto_continue = 0
     # numlist = set(numlist)
     winNumber = []
-    result_count = 0 #5개 추출을 위한 카운터
+    gen_count = 0
 
-
-    while True:
-        # 예측번호로 부터 6개 뽑아내기
-        result = sorted(random.sample(numlist,6))
-        count += 1
+    while True:  # 5개번호 추출후 종료
+        result = sorted(random.sample(numlist,6))  # 예측번호로 부터 6개 뽑아내기
 
         # band 구하기
         yellow = 0  # 1~10
@@ -527,6 +523,7 @@ def generate(targetBand, numlist, quantile_max, quantile_min):
         gray = 0  # 41 ~ 45
         band = 0  #숫자 밴드 카운트
 
+        # band 구분하기
         for i in range(0,6):
             if (result[i] <= 10):
                 yellow += 1
@@ -542,23 +539,23 @@ def generate(targetBand, numlist, quantile_max, quantile_min):
         #band 카운트
         if (yellow > 0):
             band += 1
-        if (blue > 0):
+        elif (blue > 0):
             band += 1
-        if (red > 0):
+        elif (red > 0):
             band += 1
-        if (green > 0):
+        elif (green > 0):
             band += 1
-        if (gray > 0):
+        elif (gray > 0):
             band += 1
 
-        # 홀수갯수 구하기
+        # 홀,짝수 갯수 구하기
         odd = 0
         for i in range(0,6):
             if (result[i] % 2 != 0):
                 odd = odd + 1;
         even = 6 - odd
 
-        # sum 점수 구하기.max=188, min=84
+        # sum 점수 구하기
         total = sum(result[0:6])
 
         #3자리 연번이상 확인하기
@@ -579,16 +576,16 @@ def generate(targetBand, numlist, quantile_max, quantile_min):
             ConditionCount += 1
             if (ConditionCount > random.randint(100000,1000000)):  #십만에서 백만중 하나 추출하여 count횟수가 그만큼 클때 인정
                 winNumber.append(result)
-                result_count += 1
                 ConditionCount = 0  # 0으로 초기화
                 lotto_continue = 0
+                gen_count += 1
         else:
             lotto_continue = 0  # 연번 변수 0으로 초기화
 
-        if result_count > 4:  # 5개번호 추출후 종료
-            for i in range(0,5):
-                print ("target_band = {}, win numbers = {}".format(targetBand, winNumber[i]))
-                break
+        if gen_count > 4:
+            break
+
+    return winNumber
 
 def continue_number():
     pwd = 'rlaehgus1'
@@ -606,6 +603,14 @@ def continue_number():
 
     connector.close()
 
+def to_csv():
+    pwd = 'rlaehgus1'
+    engine = create_engine('mysql+mysqlconnector://root:'+pwd+'@localhost/lotto', echo=False)
+    connector = engine.connect()
+
+    df = pd.read_sql("SELECT * FROM winlotto", con = connector)
+    df.to_csv("winlotto.csv", index=False)
+    connector.close()
 
 # In[6]:
 
@@ -663,9 +668,12 @@ def main():
     # 3, 4밴드 조합으로 추출
     for band in (3,4):
         if band == 3:
-            generate(band, b3_nums, quantile_max, quantile_min)  #generate 함수 호출
+            winNumber = generate(band, b3_nums, quantile_max, quantile_min)  #generate 함수 호출
         elif band == 4:
-            generate(band, b4_nums, quantile_max, quantile_min)  #generate 함수 호출
+            winNumber = generate(band, b4_nums, quantile_max, quantile_min)  #generate 함수 호출
+        # 번호생성후 각 번호 조합 출력
+        for r in range(0,len(winNumber)):
+            print ("target_band = {}, win numbers = {}".format(band, winNumber[r]))
 
     '''
     # 연번호 확인하기
@@ -685,6 +693,9 @@ def main():
 
     #정해진 기간의 회차별 sum 분포를 구하고, max, min를 95%, 90% 수준으로 구함
     sum_analysis()
+
+    # mysql db내용을 csv로 저장하기
+    def to_csv()
     '''
 if __name__ == "__main__":
     main()
