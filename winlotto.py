@@ -505,15 +505,63 @@ def used_number(count):
     connector.close()
     return used
 
+# generate된 숫자를 가지고 total/6=나머지 번호를 가지고 숫자 제외,포함
+def remainder(result):
+    re=True
+
+    # 6개 숫자 합을 구한 6으로 나누어 일자리 숫자구하기
+    total = sum(result[0:6])
+    etc = rounde(total / 6)
+
+    if (etc % 2 != o):
+        etc_eo = 0  # etc_eo는 etc_even odd를 뜻함.
+    else:
+        etc_eo = 1  # 홀수는 1로 세팅
+
+    # 홀,짝수 갯수 구하기
+    odd = 0
+    for i in range(0,6):
+        if (result[i] % 2 != 0):
+            odd = odd + 1;
+    even = 6 - odd
+
+    # odd, even 결과로 아래와 같은 숫자 조합 검증
+    if odd == 6:  # odd 6개 번호는 인정하지 않음.
+        re = False
+
+    if even == 6:  # even 6개 번호는 인정하지 않음.
+        re = False
+
+    if odd == 5:
+        if etc_eo == 0:
+            # 홀수가 5개이고 total/6=나머지가 짝수이면 false를 return하여 다시 generate함
+            re = False
+        else:
+            re = True
+
+    if even == 5:
+        if etc_eo == 1:
+            # 짝수가 5개이고 total/6=나머지가 홀수이면 false를 return하여 다시 generate함
+            re = False
+        else:
+            re = True
+
+    return re
+
 def generate(targetBand, numlist, quantile_max, quantile_min):
     ConditionCount = 0
     lotto_continue = 0
     # numlist = set(numlist)
     winNumber = []
     gen_count = 0
+    result = 0  # 난수 발생후 저장변수 0으로 초기화
 
-    while True:  # 5개번호 추출후 종료
-        result = sorted(random.sample(numlist,6))  # 예측번호로 부터 6개 뽑아내기
+    while True:  # 예측 조합 추출후 break로 종료
+        while re:
+            result = sorted(random.sample(numlist,6))  # 예측번호로 부터 6개 뽑아내기
+            re = remainder(result)  # 홀짝 갯수 구하고, total/6를 통한 끝수 비교
+            if re:
+                break
 
         # band 구하기
         yellow = 0  # 1~10
@@ -548,37 +596,32 @@ def generate(targetBand, numlist, quantile_max, quantile_min):
         elif (gray > 0):
             band += 1
 
-        # 홀,짝수 갯수 구하기
-        odd = 0
-        for i in range(0,6):
-            if (result[i] % 2 != 0):
-                odd = odd + 1;
-        even = 6 - odd
-
         # sum 점수 구하기
         total = sum(result[0:6])
 
         #3자리 연번이상 확인하기
-        if (result[3] - result[0] == 3):  #3 연번
+        if (result[3] - result[0] == 3):  #4 연번
             lotto_continue += 1
         elif (result[4] - result[1] == 3):
             lotto_continue += 1
         elif (result[5] - result[2] == 3):
             lotto_continue += 1
-
-        if (result[4] - result[0] == 4):  #4 연번
+        elif (result[4] - result[0] == 4):  #5 연번
             lotto_continue += 1
         elif (result[5] - result[1] == 4):
             lotto_continue += 1
 
         # 모든 조건을 검증후 번호 추출
-        if (odd != 6) and (even != 6) and (targetBand == band) and (total <= quantile_max) and (total >= quantile_min) and (lotto_continue == 0):
-            ConditionCount += 1
-            if (ConditionCount > random.randint(100000,1000000)):  #십만에서 백만중 하나 추출하여 count횟수가 그만큼 클때 인정
-                winNumber.append(result)
-                ConditionCount = 0  # 0으로 초기화
-                lotto_continue = 0
-                gen_count += 1
+        if (odd < 5) and (even < 5):  # 홀짝/짝수 5개 이상 조합 제외
+            if (targetBand == band):  # 3,4 밴드등 목표 밴드 확인
+                if (total <= quantile_max) and (total >= quantile_min):  # 분위수 range외 제외
+                    if (lotto_continue == 0):  #4,5 연속번호 조합은 제외
+                        ConditionCount += 1
+                        if (ConditionCount > random.randint(100000,1000000)):  #십만에서 백만중 하나 추출하여 count횟수가 그만큼 클때 인정
+                            winNumber.append(result)
+                            ConditionCount = 0  # 0으로 초기화
+                            lotto_continue = 0
+                            gen_count += 1
         else:
             lotto_continue = 0  # 연번 변수 0으로 초기화
 
