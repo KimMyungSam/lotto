@@ -508,15 +508,15 @@ def used_number(count):
 # generate된 숫자를 가지고 total/6=나머지 번호를 가지고 숫자 제외,포함
 def remainder(result):
     re = True
-    div6_even = 1
+    div6_even = 0
     div6_odd = 0
     # 6개 숫자 합을 구한 6으로 나누어 일자리 숫자구하기
     div6 = round(sum(result[0:6]) / 6)
 
     if (div6 % 2 != 0):
-        div6_even = 0  # etc_eo는 etc_even odd를 뜻함.
+        div6_even = 1
     else:
-        div6_odd = 1  # 홀수는 1로 세팅
+        div6_odd = 1
 
     # 홀,짝수 갯수 구하기
     odd = 0
@@ -526,35 +526,26 @@ def remainder(result):
     even = 6 - odd
 
     # odd, even 결과로 아래와 같은 숫자 조합 검증
-    if odd == 6:  # odd 6개 번호는 인정하지 않음.
-        re = False
+    if odd == 6:  re = False  # odd 6개 번호는 인정하지 않음.
 
-    if even == 6:  # even 6개 번호는 인정하지 않음.
-        re = False
+    if even == 6:  re = False  # even 6개 번호는 인정하지 않음.
 
     if odd == 5:
-        if div6_even == 0:
-            # 홀수가 5개이고 total/6=나머지가 짝수이면 false를 return하여 다시 generate함
-            re = False
-        else:
-            re = True
+        if div6_even == 1:  re = False
+        # 홀수가 5개이고 total/6=나머지가 짝수이면 false를 return하여 다시 generate함
 
     if even == 5:
-        if div6_odd == 1:
-            # 짝수가 5개이고 total/6=나머지가 홀수이면 false를 return하여 다시 generate함
-            re = False
-        else:
-            re = True
+        if div6_odd == 1:  re = False
+        # 짝수가 5개이고 total/6=나머지가 홀수이면 false를 return하여 다시 generate함
 
     return re
 
 def generate(targetBand, numlist, quantile_max, quantile_min):
-    ConditionCount = 0
-    lotto_continue = 0
     # numlist = set(numlist)
     winNumber = []
     gen_count = 0
     result = 0  # 난수 발생후 저장변수 0으로 초기화
+    ConditionCount = 0
     # 제외건수
     drop = 0
     drop2 = 0
@@ -562,15 +553,15 @@ def generate(targetBand, numlist, quantile_max, quantile_min):
     drop4 = 0
 
     while True:  # 예측 조합 추출후 break로 종료
-        band = 0  #숫자 밴드 카운트
+
         lotto_continue = 0  # 연번 변수 0으로 초기화
         # band 구하기
+        band = 0  #밴드
         yellow = 0  # 1~10
         blue = 0  # 11~20
         red = 0  # 21~30
         green = 0  # 31~40
         gray = 0  # 41 ~ 45
-
 
         result = sorted(random.sample(numlist,6))  # 예측번호로 부터 6개 뽑아내기
 
@@ -617,15 +608,23 @@ def generate(targetBand, numlist, quantile_max, quantile_min):
                     ConditionCount += 1
                     if (ConditionCount > random.randint(100000,1000000)):  #십만에서 백만중 하나 추출하여 count횟수가 그만큼 클때 인정
                         if remainder(result):  # total/6 끝수 판단하기
-                            winNumber.append(result)
-                            ConditionCount = 0  # 0으로 초기화
-                            lotto_continue = 0
-                            gen_count += 1
                             print ("remainder=",drop)
+                            print ("ConditionCount=",ConditionCount)
                             print ("continue=",drop2)
                             print ("quantile=",drop3)
-                            print ("band=",drop4)
+                            print ("band비교=",drop4)
                             print ("")
+                            # 변수 초기화
+                            ConditionCount = 0
+                            drop = 0
+                            drop2 = 0
+                            drop3 = 0
+                            drop4 = 0
+                            # 조합 건수 카운트
+                            gen_count += 1
+
+                            # 당첨번호
+                            winNumber.append(result)
                         else:  drop += 1
                 else:  drop2 += 1
             else:  drop3 += 1
